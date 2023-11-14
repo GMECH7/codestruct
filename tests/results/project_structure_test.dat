@@ -1,0 +1,18 @@
+./project
+    |
+    ./dir_a
+        |module1.py
+        ./dir_a2
+            |module3.py
+            |module5.py
+    ./dir_b
+        |module2.py
+        |module4.py
+        ./dir_c
+            |
+            ./dir_d
+                |
+                ./__pycache__
+                    |
+    ./dir_e
+        |
