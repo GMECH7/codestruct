@@ -84,13 +84,16 @@ class CodeStructure:
         """
         Method used for including libraries into the dependencies.\n
         """
-        xlsx_row_lib = len(imported_modules_inproject)
         imported_modules_lib = []
         for module in imported_modules_aux:
             if module not in imported_modules_inproject and module not in imported_modules_lib:
                 imported_modules_lib.append(module)
-                dependencies_dict[xlsx_row_lib+1] = ["<library>", module, []]
-                xlsx_row_lib += 1
+                
+        imported_modules_lib.sort()
+        xlsx_row_lib = len(imported_modules_inproject)
+        for module in imported_modules_lib:
+            dependencies_dict[xlsx_row_lib+1] = ["<library>", module, []]
+            xlsx_row_lib += 1
 
         return dependencies_dict
                       
