@@ -5,6 +5,7 @@
         ./dir_a2
             |module3.py
             |module5.py
+            |__init__.py
     ./dir_b
         |module2.py
         |module4.py

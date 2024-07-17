@@ -12,6 +12,7 @@ class CodeStructure:
         Keyword arguments:\n
             level_0_dir : The directory path at level 0.\n
         """
+        self.py_files_omit = ["__init__.py"]
         self.level_0_dir = level_0_dir
         self.patterns_list = [r'(?<=import\s)(.*?)(?=\sas\b)', r'(?<=from)(.*)(?=\simport\b)', r'(?<=import)(.*)(?=\n)']
         self.xlsx_template = rf"{ROOT_DIR}\xlsx_dependencies_template\xlsx_dependencies.xlsx"
@@ -66,7 +67,7 @@ class CodeStructure:
             for directory in code_structure_dict["Directories"][dir_level]:
                 if directory in code_structure_dict["Files"].keys():
                     for file, file_full in code_structure_dict["Files"][directory]:
-                        if file_full.endswith(".py"):
+                        if file_full.endswith(".py") and file not in self.py_files_omit:
                             imported_modules, file, folder_name = self.__module_imports_replacements(file, file_full)
                             if folder_name not in dependencies_dict.keys():
                                 dependencies_dict[module_idx] = [folder_name, file, imported_modules]
@@ -149,7 +150,7 @@ class CodeStructure:
             
         return None
     
-    def __write_xlsx_inner_cells(self, dependencies_dict, sht):
+    def __write_xlsx_inner_cells(self, dependencies_dict, sht) -> None:
         """
         Method used for writing the cells that indicate the dependencies.\n 
         """
@@ -213,22 +214,25 @@ class CodeStructure:
             lvls_to_account = 10**6
         
         for root, dirs, files in os.walk(self.level_0_dir):
-            level = root.replace(self.level_0_dir, '').count(os.sep)
-            if level <= lvls_to_account:
-                current_dir = os.path.basename(root)
-                if len(files) == 0:
-                    code_structure_dict["Files"][current_dir] = [["", f"{root}"]]
-            for file in files:
-                if level <= lvls_to_account:
-                    if current_dir not in code_structure_dict["Files"].keys():
-                        code_structure_dict["Files"][current_dir] = [[file, f"{root}\\{file}"]]
-                    else:
-                        code_structure_dict["Files"][current_dir].append([file, f"{root}\\{file}"])
-    
-            if level not in code_structure_dict["Directories"].keys():
-                code_structure_dict["Directories"][level] = [current_dir]
+            if "docs\_build\html" in root:
+                continue
             else:
-                code_structure_dict["Directories"][level].append(current_dir)
+                level = root.replace(self.level_0_dir, '').count(os.sep)
+                if level <= lvls_to_account:
+                    current_dir = os.path.basename(root)
+                    if len(files) == 0:
+                        code_structure_dict["Files"][current_dir] = [["", f"{root}"]]
+                for file in files:
+                    if level <= lvls_to_account:
+                        if current_dir not in code_structure_dict["Files"].keys():
+                            code_structure_dict["Files"][current_dir] = [[file, f"{root}\\{file}"]]
+                        else:
+                            code_structure_dict["Files"][current_dir].append([file, f"{root}\\{file}"])
+        
+                if level not in code_structure_dict["Directories"].keys():
+                    code_structure_dict["Directories"][level] = [current_dir]
+                else:
+                    code_structure_dict["Directories"][level].append(current_dir)
     
         return code_structure_dict
     
@@ -265,14 +269,14 @@ class CodeStructure:
                 print(line)
         return None
     
-    def module_dependencies(self, xlsx_dir_out, xlsx_name_out, include_libs=False):
+    def module_dependencies(self, xlsx_dir_out : str, xlsx_name_out:str, include_libs:bool=False):
         """
         Method used for creating an .xlsx file indicating the dependencies of a\n
         python based program.\n
         Keyword arguments:\n
-            xlsx_dir_out  : Outpout directory.\n
+            xlsx_dir_out : Outpout directory.\n
             xlsx_name_out : Output .xlsx filename.\n
-            include_libs  : Boolean. If True then library dependencies (like numpy\n
+            include_libs : Boolean. If True then library dependencies (like numpy\n
                             or non-project specific) are included.\n 
         Returns a dictionary of the following format:\n
             {
